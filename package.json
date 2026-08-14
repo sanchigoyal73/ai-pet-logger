@@ -1,0 +1,15 @@
+{
+  "name": "ai-pet-mvp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Minimal starter for the AI developer pet: git activity track + Q&A learning track, both writing to Notion.",
+  "type": "commonjs",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "log-qa": "node src/log-qa.js",
+    "log-git": "node src/log-git.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  }
+}
