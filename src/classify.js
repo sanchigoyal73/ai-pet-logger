@@ -17,9 +17,10 @@ AI to do something (make/fix/add/change/refactor/build/etc.).
 
 Only genuine questions with a substantive answer should be kept.
 Respond with ONLY minified JSON, no prose, no markdown fences:
-{"keep": boolean, "topic": string, "project_hint": string}
+{"keep": boolean, "keywords": ["string"], "answer_summary": "string", "project_hint": "string"}
 
-"topic" is a short 2-4 word tag (e.g. "React useEffect", "Git rebase").
+"keywords" is an array of 1-3 short tags (e.g. ["rust", "tauri"]).
+"answer_summary" is a concise 1-2 sentence summary of the AI's answer.
 "project_hint" is your best guess at the project/language involved, or "".
 If unsure whether it's a real question, default keep=false.
 
