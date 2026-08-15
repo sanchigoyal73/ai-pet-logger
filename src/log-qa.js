@@ -7,7 +7,12 @@ try { require("dotenv").config(); } catch { /* dotenv optional if env is set ano
 
 const { sanitize } = require("./sanitize");
 const { classifyExchange } = require("./classify");
-const { createLearningRow } = require("./notion");
+const { 
+  findTodayLearningRow, 
+  createLearningRow, 
+  appendLearningToPage, 
+  updateLearningRowKeywords 
+} = require("./notion");
 
 async function main() {
   const [question, answer, project = ""] = process.argv.slice(2);
@@ -33,16 +38,30 @@ async function main() {
     return;
   }
 
-  const row = await createLearningRow({
-    databaseId: process.env.NOTION_LEARNINGS_DB_ID,
-    question,
-    answer,
-    topic: verdict.topic,
-    project: project || verdict.project_hint,
-    date: new Date().toISOString().slice(0, 10),
-  });
+  const date = new Date().toISOString().slice(0, 10);
+  const databaseId = process.env.NOTION_LEARNINGS_DB_ID;
+  const newKeywords = verdict.keywords || [];
 
-  console.log("Logged to Notion:", row.url || row.id);
+  let row = await findTodayLearningRow(databaseId, date);
+
+  if (!row) {
+    row = await createLearningRow({
+      databaseId,
+      keywords: newKeywords,
+      project: project || verdict.project_hint,
+      date,
+    });
+    console.log("Created new daily learning page:", row.url || row.id);
+  } else {
+    const existingKeywords = row.properties.Keywords?.multi_select?.map(k => k.name) || [];
+    const mergedKeywords = Array.from(new Set([...existingKeywords, ...newKeywords]));
+    
+    await updateLearningRowKeywords(row.id, mergedKeywords);
+    console.log("Updated keywords on existing daily page:", row.url || row.id);
+  }
+
+  await appendLearningToPage(row.id, question, verdict.answer_summary || "No summary provided.", answer);
+  console.log("Appended Q&A to the page.");
 }
 
 main().catch((err) => {

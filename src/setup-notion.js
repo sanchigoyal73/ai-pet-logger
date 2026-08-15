@@ -31,9 +31,8 @@ async function createLearningsDatabase(parentPageId) {
     parent: { type: "page_id", page_id: parentPageId },
     title: [{ type: "text", text: { content: "Learnings" } }],
     properties: {
-      Question: { title: {} },
-      Answer: { rich_text: {} },
-      Topic: { select: { options: [] } },
+      Name: { title: {} },
+      Keywords: { multi_select: { options: [] } },
       Project: { rich_text: {} },
       Date: { date: {} },
     },

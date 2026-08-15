@@ -18,16 +18,66 @@ async function notionRequest(path, method, body) {
   return res.json();
 }
 
-async function createLearningRow({ databaseId, question, answer, topic, project, date }) {
+async function findTodayLearningRow(databaseId, date) {
+  const result = await notionRequest(`/databases/${databaseId}/query`, "POST", {
+    filter: { property: "Date", date: { equals: date } },
+  });
+  return result.results?.[0] || null;
+}
+
+async function createLearningRow({ databaseId, keywords, project, date }) {
+  const dateObj = new Date(date);
+  const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
   return notionRequest("/pages", "POST", {
     parent: { database_id: databaseId },
     properties: {
-      Question: { title: [{ text: { content: question.slice(0, 2000) } }] },
-      Answer: { rich_text: [{ text: { content: answer.slice(0, 2000) } }] },
-      Topic: { select: { name: topic || "General" } },
+      Name: { title: [{ text: { content: formattedDate } }] },
+      Keywords: { multi_select: keywords.map(k => ({ name: k })) },
       Project: { rich_text: [{ text: { content: project || "" } }] },
       Date: { date: { start: date } },
+    }
+  });
+}
+
+async function appendLearningToPage(pageId, question, summary, originalAnswer) {
+  const children = [
+    {
+      object: "block",
+      heading_3: { rich_text: [{ text: { content: question.slice(0, 2000) } }] }
     },
+    {
+      object: "block",
+      paragraph: { rich_text: [{ text: { content: summary.slice(0, 2000) } }] }
+    },
+    {
+      object: "block",
+      toggle: {
+        rich_text: [{ text: { content: "Original Verbatim Answer" } }],
+        children: [
+          {
+            object: "block",
+            paragraph: {
+              rich_text: [{ text: { content: originalAnswer.slice(0, 2000) } }]
+            }
+          }
+        ]
+      }
+    },
+    {
+      object: "block",
+      divider: {}
+    }
+  ];
+
+  return notionRequest(`/blocks/${pageId}/children`, "PATCH", { children });
+}
+
+async function updateLearningRowKeywords(pageId, newKeywords) {
+  return notionRequest(`/pages/${pageId}`, "PATCH", {
+    properties: {
+      Keywords: { multi_select: newKeywords.map(k => ({ name: k })) }
+    }
   });
 }
 
@@ -66,6 +116,9 @@ async function updateGitActivityRow(pageId, rest) {
 
 module.exports = {
   createLearningRow,
+  findTodayLearningRow,
+  appendLearningToPage,
+  updateLearningRowKeywords,
   createGitActivityRow,
   updateGitActivityRow,
   findTodayGitRow,
