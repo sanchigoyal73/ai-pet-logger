@@ -40,6 +40,77 @@ async function createLearningRow({ databaseId, keywords, project, date }) {
   });
 }
 
+function parseRichText(text) {
+  const parts = [];
+  const regex = /(\*\*.*?\*\*|`.*?`)/g;
+  let lastIndex = 0;
+  let match;
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({
+        text: { content: text.substring(lastIndex, match.index) }
+      });
+    }
+    const matchedStr = match[0];
+    if (matchedStr.startsWith('**')) {
+       parts.push({
+         text: { content: matchedStr.substring(2, matchedStr.length - 2) },
+         annotations: { bold: true }
+       });
+    } else if (matchedStr.startsWith('`')) {
+       parts.push({
+         text: { content: matchedStr.substring(1, matchedStr.length - 1) },
+         annotations: { code: true }
+       });
+    }
+    lastIndex = regex.lastIndex;
+  }
+  if (lastIndex < text.length) {
+    parts.push({ text: { content: text.substring(lastIndex) } });
+  }
+  return parts.length > 0 ? parts : [{ text: { content: text.slice(0, 2000) } }];
+}
+
+function parseMarkdownToNotionBlocks(md) {
+  const blocks = [];
+  const lines = md.split('\n');
+  let currentParagraph = [];
+
+  function flushParagraph() {
+    if (currentParagraph.length > 0) {
+      blocks.push({
+        object: "block",
+        paragraph: { rich_text: parseRichText(currentParagraph.join('\n').slice(0, 2000)) }
+      });
+      currentParagraph = [];
+    }
+  }
+
+  for (let line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('### ')) {
+      flushParagraph();
+      blocks.push({ object: "block", heading_3: { rich_text: parseRichText(trimmed.substring(4).slice(0, 2000)) } });
+    } else if (trimmed.startsWith('## ')) {
+      flushParagraph();
+      blocks.push({ object: "block", heading_2: { rich_text: parseRichText(trimmed.substring(3).slice(0, 2000)) } });
+    } else if (trimmed.startsWith('# ')) {
+      flushParagraph();
+      blocks.push({ object: "block", heading_1: { rich_text: parseRichText(trimmed.substring(2).slice(0, 2000)) } });
+    } else if (trimmed === '') {
+      flushParagraph();
+    } else {
+      currentParagraph.push(line);
+    }
+  }
+  flushParagraph();
+  
+  if (blocks.length === 0) {
+     blocks.push({ object: "block", paragraph: { rich_text: [{ text: { content: md.slice(0,2000) } }] } });
+  }
+  return blocks;
+}
+
 async function appendLearningToPage(pageId, question, summary, originalAnswer) {
   const children = [
     {
@@ -54,14 +125,7 @@ async function appendLearningToPage(pageId, question, summary, originalAnswer) {
       object: "block",
       toggle: {
         rich_text: [{ text: { content: "Original Verbatim Answer" } }],
-        children: [
-          {
-            object: "block",
-            paragraph: {
-              rich_text: [{ text: { content: originalAnswer.slice(0, 2000) } }]
-            }
-          }
-        ]
+        children: parseMarkdownToNotionBlocks(originalAnswer)
       }
     },
     {
