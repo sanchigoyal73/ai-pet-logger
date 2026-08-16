@@ -13,6 +13,7 @@ const {
   appendLearningToPage, 
   updateLearningRowKeywords 
 } = require("./notion");
+const { notify } = require("./pet-ui");
 
 async function main() {
   const [question, answer, project = ""] = process.argv.slice(2);
@@ -43,6 +44,7 @@ async function main() {
   const newKeywords = verdict.keywords || [];
 
   let row = await findTodayLearningRow(databaseId, date);
+  let isNewPage = false;
 
   if (!row) {
     row = await createLearningRow({
@@ -52,6 +54,7 @@ async function main() {
       date,
     });
     console.log("Created new daily learning page:", row.url || row.id);
+    isNewPage = true;
   } else {
     const existingKeywords = row.properties.Keywords?.multi_select?.map(k => k.name) || [];
     const mergedKeywords = Array.from(new Set([...existingKeywords, ...newKeywords]));
@@ -62,6 +65,13 @@ async function main() {
 
   await appendLearningToPage(row.id, question, verdict.answer_summary || "No summary provided.", answer);
   console.log("Appended Q&A to the page.");
+
+  const keywordsString = newKeywords.join(', ') || 'General';
+  if (isNewPage) {
+    notify('New Learning Day', `Created today's page with tags: ${keywordsString}`, '🐾');
+  } else {
+    notify('Question Saved', `Appended to today's page (${keywordsString})`, '🐾');
+  }
 }
 
 main().catch((err) => {

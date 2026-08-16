@@ -6,9 +6,16 @@
 
 try { require("dotenv").config(); } catch { /* optional */ }
 
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+
 const { extractTodayGitActivity } = require("./git-extract");
 const { summarizeCommits } = require("./summarize");
 const { createGitActivityRow, updateGitActivityRow, findTodayGitRow } = require("./notion");
+
+const RATE_LIMIT_MINUTES = 15;
+const RATE_LIMIT_FILE = path.join(os.homedir(), '.ai-pet-git-last-run');
 
 async function main() {
   const activity = extractTodayGitActivity();
@@ -16,6 +23,15 @@ async function main() {
   if (activity.commits.length === 0) {
     console.log("No commits today — nothing to log.");
     return;
+  }
+
+  const now = Date.now();
+  if (fs.existsSync(RATE_LIMIT_FILE)) {
+    const lastRun = parseInt(fs.readFileSync(RATE_LIMIT_FILE, 'utf8'), 10);
+    if (!isNaN(lastRun) && (now - lastRun) < RATE_LIMIT_MINUTES * 60 * 1000) {
+      console.log(`🐾 Skipping Git summary — ran less than ${RATE_LIMIT_MINUTES} minutes ago.`);
+      return;
+    }
   }
 
   const date = new Date().toISOString().slice(0, 10);
@@ -42,6 +58,9 @@ async function main() {
   }
 
   console.log("Summary:", summary);
+  
+  // Write rate-limit timestamp
+  fs.writeFileSync(RATE_LIMIT_FILE, now.toString());
 }
 
 main().catch((err) => {
