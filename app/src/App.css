@@ -1,0 +1,175 @@
+:root {
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: #2c3e50;
+  background-color: #f0f4f8;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+.container {
+  margin: 0 auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  background: white;
+  padding: 3rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+
+.pet-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 250px;
+  justify-content: flex-end;
+}
+
+.status-bubble {
+  position: absolute;
+  top: -20px;
+  background: #fff;
+  border: 4px solid #333;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-family: 'Courier New', Courier, monospace; /* Pixel-ish feel */
+  font-size: 1.1rem;
+  box-shadow: 4px 4px 0px #333;
+  z-index: 10;
+  transition: all 0.3s ease;
+  animation: float 3s ease-in-out infinite;
+}
+
+.status-bubble.awake {
+  color: #d35400;
+  border-color: #d35400;
+  box-shadow: 4px 4px 0px #d35400;
+}
+
+.status-bubble.sleeping {
+  color: #2980b9;
+  border-color: #2980b9;
+  box-shadow: 4px 4px 0px #2980b9;
+}
+
+/* Speech bubble pointer */
+.status-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 12px 12px 0;
+  border-style: solid;
+  border-color: inherit transparent transparent transparent;
+}
+
+.pixel-cat {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  /* Since it's pixel art, keep edges crisp */
+  image-rendering: pixelated; 
+  z-index: 5;
+  border-radius: 20px; /* In case the generated image has white edges */
+  mix-blend-mode: multiply;
+}
+
+.pixel-cat.bouncing {
+  animation: bounce 0.5s cubic-bezier(0.28, 0.84, 0.42, 1) infinite alternate;
+}
+
+.pixel-cat.idle {
+  animation: breathe 3s ease-in-out infinite;
+}
+
+.shadow {
+  width: 100px;
+  height: 15px;
+  background: rgba(0,0,0,0.1);
+  border-radius: 50%;
+  margin-top: 10px;
+  animation: shadow-scale 0.5s cubic-bezier(0.28, 0.84, 0.42, 1) infinite alternate;
+}
+
+.pixel-cat.idle + .shadow {
+  animation: shadow-breathe 3s ease-in-out infinite;
+}
+
+.controls h2 {
+  margin: 0 0 10px 0;
+  font-size: 2rem;
+  color: #2c3e50;
+}
+
+.controls p {
+  color: #7f8c8d;
+  margin: 0 0 20px 0;
+}
+
+.settings-btn {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  font-size: 1.1rem;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.2s, background 0.2s;
+  box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+}
+
+.settings-btn:hover {
+  background: #2980b9;
+  transform: translateY(-2px);
+}
+
+/* Animations */
+@keyframes bounce {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-30px); }
+}
+
+@keyframes shadow-scale {
+  0% { transform: scale(1); opacity: 0.1; }
+  100% { transform: scale(0.6); opacity: 0.05; }
+}
+
+@keyframes breathe {
+  0% { transform: scale(1) translateY(0); }
+  50% { transform: scale(1.02) translateY(2px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+@keyframes shadow-breathe {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+@keyframes float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+  100% { transform: translateY(0); }
+}
