@@ -11,18 +11,20 @@ const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-flash-lite-latest";
 
 async function classifyExchange(question, answer) {
   const prompt = `You classify a single exchange from a coding CLI session.
-Decide if the USER's message is a genuine QUESTION seeking understanding
-(why/what/how/explain/does/etc.) versus an INSTRUCTION/command telling the
-AI to do something (make/fix/add/change/refactor/build/etc.).
+Decide if the USER's message is a genuine, IMPORTANT QUESTION seeking understanding
+(why/what/how/explain/does/etc.) about coding, architecture, or tools versus an INSTRUCTION/command telling the
+AI to do something (make/fix/add/change/refactor/build/etc.) or a TRIVIAL question.
 
-Only genuine questions with a substantive answer should be kept.
+Only genuine, significant questions with a substantive answer that represent a meaningful learning moment should be kept.
+Do NOT keep trivial questions, rhetorical questions, or questions about subjective things (like "how does this look?").
+
 Respond with ONLY minified JSON, no prose, no markdown fences:
 {"keep": boolean, "keywords": ["string"], "answer_summary": "string", "project_hint": "string"}
 
 "keywords" is an array of 1-3 short tags (e.g. ["rust", "tauri"]).
 "answer_summary" is a concise 1-2 sentence summary of the AI's answer.
 "project_hint" is your best guess at the project/language involved, or "".
-If unsure whether it's a real question, default keep=false.
+If unsure whether it's a significant, non-trivial learning question, default keep=false.
 
 QUESTION: ${question}
 
