@@ -68,33 +68,27 @@ function handleEntry(entry) {
     const match = text.match(/<USER_REQUEST>([\s\S]*?)<\/USER_REQUEST>/);
     if (match) {
       text = match[1].trim();
-      broadcastState('thinking');
-      pendingQuestion = text;
-        
-      const child = spawn(process.argv[0], [path.join(__dirname, 'log-qa.js'), pendingQuestion, ''], {
-        env: { ...process.env, NOTION_QA_PENDING: pendingQuestion },
-        stdio: 'inherit'
-      });
-      
-      child.on('exit', (code) => {
-        pendingQuestion = null;
-        if (code === 0) {
-          broadcastState('logged');
-          setTimeout(() => broadcastState('idle'), 3000);
-        } else {
-          broadcastState('idle');
-        }
-      });
     }
+    broadcastState('thinking');
+    pendingQuestion = text;
   } else if (entry.type === 'PLANNER_RESPONSE' && pendingQuestion) {
     const answer = entry.content;
     const question = pendingQuestion;
     pendingQuestion = null;
     
     console.log(`🐾 Detected Q&A match. Logging to Notion...`);
-    spawn(process.argv[0], [path.join(__dirname, 'log-qa.js'), question, answer], {
+    const child = spawn(process.argv[0], [path.join(__dirname, 'log-qa.js'), question, answer], {
       stdio: 'inherit',
       env: process.env // Ensure .env variables are passed down
+    });
+    
+    child.on('exit', (code) => {
+      if (code === 0) {
+        broadcastState('logged');
+        setTimeout(() => broadcastState('idle'), 3000);
+      } else {
+        broadcastState('idle');
+      }
     });
   }
 }
