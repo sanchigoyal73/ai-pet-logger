@@ -4,6 +4,7 @@ const path = require('path');
 const os = require('os');
 const { spawn } = require('child_process');
 const { loadState, saveState } = require('./state');
+const { broadcastState } = require('./ipc');
 
 const brainDir = path.join(os.homedir(), '.gemini', 'antigravity-ide', 'brain');
 let state = loadState();
@@ -67,8 +68,24 @@ function handleEntry(entry) {
     const match = text.match(/<USER_REQUEST>([\s\S]*?)<\/USER_REQUEST>/);
     if (match) {
       text = match[1].trim();
+      broadcastState('thinking');
+      pendingQuestion = text;
+        
+      const child = spawn(process.argv[0], [path.join(__dirname, 'log-qa.js'), pendingQuestion, ''], {
+        env: { ...process.env, NOTION_QA_PENDING: pendingQuestion },
+        stdio: 'inherit'
+      });
+      
+      child.on('exit', (code) => {
+        pendingQuestion = null;
+        if (code === 0) {
+          broadcastState('logged');
+          setTimeout(() => broadcastState('idle'), 3000);
+        } else {
+          broadcastState('idle');
+        }
+      });
     }
-    pendingQuestion = text;
   } else if (entry.type === 'PLANNER_RESPONSE' && pendingQuestion) {
     const answer = entry.content;
     const question = pendingQuestion;
