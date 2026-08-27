@@ -225,3 +225,4 @@ Once the MVP pipeline is proven, the intended production architecture wraps the 
 ### 3.4 Explicitly Out of Scope (At Any Stage)
 
 SaaS infrastructure, user accounts, a mobile app, PostgreSQL/Redis/Kubernetes/Docker, multi-agent systems, vector databases or RAG, autonomous coding, arbitrary shell execution, browser control, and full third-party account integrations (e.g. a connected Pinterest account rather than a public board URL). None of these are required for the core idea to work.
+

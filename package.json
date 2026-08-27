@@ -7,7 +7,9 @@
   "engines": { "node": ">=18" },
   "scripts": {
     "log-qa": "node src/log-qa.js",
-    "log-git": "node src/log-git.js"
+    "log-git": "node src/log-git.js",
+    "watch": "node src/ide-watcher.js",
+    "install-daemon": "node src/setup-daemon.js"
   },
   "dependencies": {
     "dotenv": "^16.4.5"
