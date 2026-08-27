@@ -4,7 +4,7 @@ const path = require('path');
 const os = require('os');
 const { spawn } = require('child_process');
 const { loadState, saveState } = require('./state');
-const { broadcastState } = require('./ipc');
+const { notifyState } = require('./notify');
 
 const brainDir = path.join(os.homedir(), '.gemini', 'antigravity-ide', 'brain');
 let state = loadState();
@@ -69,7 +69,7 @@ function handleEntry(entry) {
     if (match) {
       text = match[1].trim();
     }
-    broadcastState('thinking');
+    notifyState('thinking');
     pendingQuestion = text;
   } else if (entry.type === 'PLANNER_RESPONSE' && pendingQuestion) {
     const answer = entry.content;
@@ -84,10 +84,7 @@ function handleEntry(entry) {
     
     child.on('exit', (code) => {
       if (code === 0) {
-        broadcastState('logged');
-        setTimeout(() => broadcastState('idle'), 3000);
-      } else {
-        broadcastState('idle');
+        notifyState('logged');
       }
     });
   }
