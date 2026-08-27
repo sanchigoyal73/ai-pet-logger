@@ -6,7 +6,7 @@ let currentPanel = undefined;
 function getWebviewContent(state) {
   // Simple CSS animation for the pixel cat sprite based on state
   const stateGifs = {
-    idle: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNnhhcm1lNWZkMHg1cGxqY2NsaDdxYXJ6NjRleDFveG9sOWx5cGp5eCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/VbnUQpnihPSIgIXuZv/giphy.gif', // Placeholder sleeping cat
+    idle: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNnhhcm1lNWZkMHg1cGxqY2NsaDdxYXJ6NjRleDFveG9sOWx5cGp5eCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/VbnUQpnihPSIgIXuZv/giphy.gif',
     listening: 'https://media.giphy.com/media/Lp9hAYOADiRck/giphy.gif',
     thinking: 'https://media.giphy.com/media/Lp9hAYOADiRck/giphy.gif',
     logged: 'https://media.giphy.com/media/11s7Ke7jcNxCHS/giphy.gif'
