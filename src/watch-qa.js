@@ -3,9 +3,12 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { spawn } = require('child_process');
+const { loadState, saveState } = require('./state');
 
 const brainDir = path.join(os.homedir(), '.gemini', 'antigravity-ide', 'brain');
-let filePositions = {};
+let state = loadState();
+let filePositions = state.filePositions || {};
+
 let pendingQuestion = null;
 
 function scanFiles() {
@@ -40,6 +43,9 @@ function poll() {
       fs.closeSync(fd);
       
       filePositions[file] = stat.size;
+      state.filePositions = filePositions;
+      saveState(state);
+      
       const newContent = buffer.toString('utf8');
       
       const lines = newContent.split('\n').filter(l => l.trim() !== '');
@@ -78,8 +84,12 @@ function handleEntry(entry) {
 
 // Initial scan
 scanFiles().forEach(file => {
-  filePositions[file] = fs.statSync(file).size;
+  if (filePositions[file] === undefined) {
+    filePositions[file] = fs.statSync(file).size;
+  }
 });
+state.filePositions = filePositions;
+saveState(state);
 
 setInterval(poll, 2000);
 console.log(`🐾 Watcher active. Listening for CLI conversations in ${brainDir}...`);
