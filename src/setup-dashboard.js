@@ -1,16 +1,18 @@
 #!/usr/bin/env node
 require('dotenv').config();
 
-const NOTION_TOKEN = process.env.NOTION_TOKEN;
+const { getSecret } = require('./keychain');
+
 // Notion currently does not support creating databases/views natively in the public API yet without beta flags,
 // but we mimic the setup-views logic we used previously.
 const NOTION_VERSION = "2026-03-11"; 
 
 async function notionRequest(path, method, body) {
+  const token = await getSecret('NOTION_TOKEN', 'NOTION_TOKEN');
   const res = await fetch(`https://api.notion.com/v1${path}`, {
     method,
     headers: {
-      Authorization: `Bearer ${NOTION_TOKEN}`,
+      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
       "Notion-Version": NOTION_VERSION,
     },
@@ -23,11 +25,11 @@ async function notionRequest(path, method, body) {
 }
 
 async function setupDashboard() {
-  const gitDbId = process.env.NOTION_GIT_DB_ID;
-  const learningDbId = process.env.NOTION_LEARNING_DB_ID;
+  const gitDbId = await getSecret('NOTION_GIT_DB_ID', 'NOTION_GIT_DB_ID');
+  const learningDbId = await getSecret('NOTION_LEARNINGS_DB_ID', 'NOTION_LEARNINGS_DB_ID');
 
   if (!gitDbId || !learningDbId) {
-    console.error("Missing NOTION_GIT_DB_ID or NOTION_LEARNING_DB_ID in .env");
+    console.error("Missing NOTION_GIT_DB_ID or NOTION_LEARNINGS_DB_ID in .env or keychain");
     return;
   }
 

@@ -13,6 +13,8 @@ const os = require('os');
 const { extractTodayGitActivity } = require("./git-extract");
 const { summarizeCommits } = require("./summarize");
 const { createGitActivityRow, updateGitActivityRow, findTodayGitRow } = require("./notion");
+const { notifyState } = require("./notify");
+const { getSecret } = require("./keychain");
 
 const RATE_LIMIT_MINUTES = 15;
 const RATE_LIMIT_FILE = path.join(os.homedir(), '.ai-pet-git-last-run');
@@ -24,6 +26,8 @@ async function main() {
     console.log("No commits today — nothing to log.");
     return;
   }
+
+  notifyState('thinking');
 
   const now = Date.now();
   if (fs.existsSync(RATE_LIMIT_FILE)) {
@@ -37,7 +41,8 @@ async function main() {
   const date = new Date().toISOString().slice(0, 10);
   const summary = await summarizeCommits(activity.commits);
 
-  const existing = await findTodayGitRow(process.env.NOTION_GIT_DB_ID, date);
+  const dbId = await getSecret('NOTION_GIT_DB_ID', 'NOTION_GIT_DB_ID');
+  const existing = await findTodayGitRow(dbId, date);
 
   const payload = {
     branch: activity.branch,
@@ -53,7 +58,7 @@ async function main() {
     const row = await updateGitActivityRow(existing.id, payload);
     console.log("Updated today's row in Notion:", row.url || row.id);
   } else {
-    const row = await createGitActivityRow({ databaseId: process.env.NOTION_GIT_DB_ID, ...payload });
+    const row = await createGitActivityRow({ databaseId: dbId, ...payload });
     console.log("Created today's row in Notion:", row.url || row.id);
   }
 
@@ -61,6 +66,7 @@ async function main() {
   
   // Write rate-limit timestamp
   fs.writeFileSync(RATE_LIMIT_FILE, now.toString());
+  notifyState('logged');
 }
 
 main().catch((err) => {
